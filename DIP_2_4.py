@@ -35,8 +35,8 @@ def gasuss_noise(image, mean=0, var=0.001):
 # 读取图片
 img = cv.imread("D:\\pictures\\car.jpg")
 
-# 添加椒盐噪声，噪声比例为 0.02
-img_pepper = sp_noise(img, prob=0.02)
+# 添加椒盐噪声，噪声比例为 0.01
+img_pepper = sp_noise(img, prob=0.01)
 
 # 添加高斯噪声,均值为0，方差为0.001
 img_gasuss = gasuss_noise(img, mean=0, var=0.001)

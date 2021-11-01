@@ -2,6 +2,7 @@ import math
 
 import cv2 as cv
 import numpy as np
+import random
 
 def rgbtohsi(rgb_lwpImg):
     rows = int(rgb_lwpImg.shape[0])
@@ -80,9 +81,24 @@ def hsitorgb(hsi_img):
     return bgr_img
 
 
+# 添加椒盐噪声function(), prob:噪声比例
+def sp_noise(image,prob):
+    output = np.zeros(image.shape,np.uint8)
+    thres = 1 - prob
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            rdn = random.random()
+            if rdn < prob:
+                output[i][j] = 0
+            elif rdn > thres:
+                output[i][j] = 255
+            else:
+                output[i][j] = image[i][j]
+    return output
+
 rgb_lwpImg = cv.imread("D:\\pictures\\car.jpg")
 
-# hsi_lwpImg是
+#
 hsi_lwpImg = rgbtohsi(rgb_lwpImg)
 
 # rgb原图
@@ -94,12 +110,22 @@ cv.imshow('hsi_img', hsi_lwpImg)
 # I为HSI图像的I分量
 img = rgbtohsi(rgb_lwpImg)
 h, s, i=cv.split(img)
+i=(h+s+i)/3
 cv.imshow("i", i)
+
+# 添加椒盐噪声，噪声比例为 0.01
+img_I_pepper = sp_noise(i, prob=0.01)
+
+# 显示添加椒盐噪声后的图片
+cv.imshow("添加椒盐噪声图片", img_I_pepper)
+
 Gaussian_I = cv.GaussianBlur(i, (3, 3), 1)
+Gaussian_S = cv.GaussianBlur(s, (3, 3), 1)
+Gaussian_H = cv.GaussianBlur(h, (3, 3), 1)
+img1 = cv.merge([Gaussian_H, Gaussian_H, Gaussian_I])
+
+cv.imshow("tyt",img1)
 cv.imshow("Gaussian_I", Gaussian_I)
-
-
-hsi_lwpImg
 
 key = cv.waitKey(0)
 cv.destroyAllWindows()
