@@ -1,16 +1,18 @@
-import cv2
+import math
+
+import cv2 as cv
 import numpy as np
 
 def rgbtohsi(rgb_lwpImg):
     rows = int(rgb_lwpImg.shape[0])
     cols = int(rgb_lwpImg.shape[1])
-    b, g, r = cv2.split(rgb_lwpImg)
+    b, g, r = cv.split(rgb_lwpImg)
     # 归一化到[0,1]
     b = b / 255.0
     g = g / 255.0
     r = r / 255.0
     hsi_lwpImg = rgb_lwpImg.copy()
-    H, S, I = cv2.split(hsi_lwpImg)
+    H, S, I = cv.split(hsi_lwpImg)
     for i in range(rows):
         for j in range(cols):
             num = 0.5 * ((r[i, j]-g[i, j])+(r[i, j]-b[i, j]))
@@ -38,15 +40,68 @@ def rgbtohsi(rgb_lwpImg):
             hsi_lwpImg[i, j, 1] = S*255
             hsi_lwpImg[i, j, 2] = I*255
     return hsi_lwpImg
-if __name__ == '__main__':
-    rgb_lwpImg = cv2.imread("D:\\pictures\\car.jpg")
-    hsi_lwpImg = rgbtohsi(rgb_lwpImg)
 
-    cv2.imshow('rgb_lwpImg', rgb_lwpImg)
-    cv2.imshow('hsi_lwpImg', hsi_lwpImg)
 
-    key = cv2.waitKey(0) & 0xFF
-    if key == ord('q'):
-        cv2.destroyAllWindows()
+# hsi图片转rgb图片
+def hsitorgb(hsi_img):
+    h = int(hsi_img.shape[0])
+    w = int(hsi_img.shape[1])
+    H, S, I = cv.split(hsi_img)
+    H = H / 255.0
+    S = S / 255.0
+    I = I / 255.0
+    bgr_img = hsi_img.copy()
+    B, G, R = cv.split(bgr_img)
+    for i in range(h):
+        for j in range(w):
+            if S[i, j] < 1e-6:
+                R = I[i, j]
+                G = I[i, j]
+                B = I[i, j]
+            else:
+                H[i, j] *= 360
+                if H[i, j] > 0 and H[i, j] <= 120:
+                    B = I[i, j] * (1 - S[i, j])
+                    R = I[i, j] * (1 + (S[i, j] * math.cos(H[i, j]*math.pi/180)) / math.cos((60 - H[i, j])*math.pi/180))
+                    G = 3 * I[i, j] - (R + B)
+                elif H[i, j] > 120 and H[i, j] <= 240:
+                    H[i, j] = H[i, j] - 120
+                    R = I[i, j] * (1 - S[i, j])
+                    G = I[i, j] * (1 + (S[i, j] * math.cos(H[i, j]*math.pi/180)) / math.cos((60 - H[i, j])*math.pi/180))
+                    B = 3 * I[i, j] - (R + G)
+                elif H[i, j] > 240 and H[i, j] <= 360:
+                    H[i, j] = H[i, j] - 240
+                    G = I[i, j] * (1 - S[i, j])
+                    B = I[i, j] * (1 + (S[i, j] * math.cos(H[i, j]*math.pi/180)) / math.cos((60 - H[i, j])*math.pi/180))
+                    R = 3 * I[i, j] - (G + B)
+            bgr_img[i, j, 0] = B * 255
+            bgr_img[i, j, 1] = G * 255
+            bgr_img[i, j, 2] = R * 255
+    return bgr_img
+
+
+rgb_lwpImg = cv.imread("D:\\pictures\\car.jpg")
+
+# hsi_lwpImg是
+hsi_lwpImg = rgbtohsi(rgb_lwpImg)
+
+# rgb原图
+cv.imshow('rgb_img', rgb_lwpImg)
+
+# hsi图片
+cv.imshow('hsi_img', hsi_lwpImg)
+
+# I为HSI图像的I分量
+img = rgbtohsi(rgb_lwpImg)
+h, s, i=cv.split(img)
+cv.imshow("i", i)
+Gaussian_I = cv.GaussianBlur(i, (3, 3), 1)
+cv.imshow("Gaussian_I", Gaussian_I)
+
+
+hsi_lwpImg
+
+key = cv.waitKey(0)
+cv.destroyAllWindows()
 
 

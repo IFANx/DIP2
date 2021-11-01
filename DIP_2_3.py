@@ -20,8 +20,8 @@ def sp_noise(image,prob):
 # 读取图片
 img = cv.imread("D:\\pictures\\car.jpg")
 
-# 添加椒盐噪声，噪声比例为 0.02
-img_pepper = sp_noise(img, prob=0.02)
+# 添加椒盐噪声，噪声比例为 0.01
+img_pepper = sp_noise(img, prob=0.01)
 
 # 显示添加椒盐噪声后的图片
 cv.imshow("添加椒盐噪声图片", img_pepper)

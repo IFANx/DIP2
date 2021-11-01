@@ -20,6 +20,10 @@ def gasuss_noise(image, mean=0, var=0.001):
 # 读取图片
 img = cv.imread("D:\\pictures\\car.jpg")
 
+
+# 原图
+cv.imshow("原图", img)
+
 # 添加高斯噪声,均值为0，方差为0.001
 img_gasuss = gasuss_noise(img, mean=0, var=0.001)
 
