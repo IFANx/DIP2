@@ -17,7 +17,7 @@ def sp_noise(image,prob):
                 output[i][j] = image[i][j]
     return output
 
-# 添加高斯掩膜函数,mean : 均值,var : 方差
+# 添加高斯噪声函数,mean : 均值,var : 方差
 def gasuss_noise(image, mean=0, var=0.001):
 
     image = np.array(image/255, dtype=float)
@@ -33,7 +33,7 @@ def gasuss_noise(image, mean=0, var=0.001):
 
 
 # 读取图片
-img = cv.imread("D:\\pictures\\car.jpg")
+img = cv.imread("car.jpg")
 
 # 添加椒盐噪声，噪声比例为 0.01
 img_pepper = sp_noise(img, prob=0.01)
@@ -48,19 +48,19 @@ img_median_pepper = cv.medianBlur(img_pepper, 5)
 img_median_gasuss = cv.medianBlur(img_gasuss, 5)
 
 # 原图
-cv.imshow("原图", img)
+cv.imshow("original", img)
 
 # 添加椒盐噪声后图像
-cv.imshow("添加椒盐噪声后图像", img_pepper)
+cv.imshow("add salt_pepper", img_pepper)
 
 # 添加高斯噪声后图像
-cv.imshow("添加高斯噪声后图像", img_gasuss)
+cv.imshow("add gasuss_noise", img_gasuss)
 
 # 中值滤波处理椒盐噪声后图像
-cv.imshow("中值滤波处理椒盐噪声后图像", img_median_pepper)
+cv.imshow("median_pepper", img_median_pepper)
 
 # 中值滤波处理高斯噪声后图像
-cv.imshow("中值滤波处理高斯噪声后图像", img_median_gasuss)
+cv.imshow("median_gasuss", img_median_gasuss)
 
 cv.waitKey(0)
 cv.destroyAllWindows()

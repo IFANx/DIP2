@@ -17,43 +17,81 @@ def sp_noise(image,prob):
                 output[i][j] = image[i][j]
     return output
 
+# 生成高斯卷积核
+def generate_gaussian_lpf_mask(shifted_fft, radius) -> np.ndarray:
+    """
+    Generate a gauss LPF mask for frequency domain filtering.
+    :param shifted_fft: the fft spectrum to filter
+    :param radius: the lpf filter's radius
+    :return: the mask
+    """
+    size_x = shifted_fft.shape[0]
+    size_y = shifted_fft.shape[1]
+    mask = np.zeros((size_x, size_y))
+    x0 = np.floor(size_x / 2)
+    y0 = np.floor(size_y / 2)
+    for i in range(size_x):
+        for j in range(size_y):
+            d = np.sqrt((i - x0) ** 2 + (j - y0) ** 2)
+            mask[i][j] = np.exp((-1) * d ** 2 / 2 / (radius ** 2))
+    return mask
+
 # 读取图片
-img = cv.imread("D:\\pictures\\car.jpg")
+img = cv.imread("car.jpg")
 
 # 添加椒盐噪声，噪声比例为 0.01
 img_pepper = sp_noise(img, prob=0.01)
 
 # 显示添加椒盐噪声后的图片
-cv.imshow("添加椒盐噪声图片", img_pepper)
+cv.imshow("img_pepper", img_pepper)
 
 # 重复对图像rgb三通道做高斯滤波
 b, g, r = cv.split(img_pepper)
-img_blue = cv.imshow("Blue_gray", b)
-img_green = cv.imshow("Green_grey", g)
-img_red = cv.imshow("Red_grey", r)
-
-
-zeros = np.zeros(img.shape[:2], dtype = "uint8")
-merged_r = cv.merge([zeros,zeros,r])
-
-zeros = np.zeros(img.shape[:2], dtype = "uint8")
-merged_g = cv.merge([zeros,g,zeros])
-
-zeros = np.zeros(img.shape[:2], dtype = "uint8")
-merged_b = cv.merge([b,zeros,zeros])
 
 # blue通道做标准差σ=1.0的高斯滤波
-Gaussian_blue = cv.GaussianBlur(merged_b, (3, 3), 1)
-cv.imshow("Gaussian_blue", Gaussian_blue)
+Gaussian_blue = cv.GaussianBlur(b, (3, 3), 1)
 
 # green通道做标准差σ=1.0的高斯滤波
-Gaussian_green = cv.GaussianBlur(merged_g, (3, 3), 1)
-cv.imshow("Gaussian_green", Gaussian_green)
+Gaussian_green = cv.GaussianBlur(g, (3, 3), 1)
 
 # red通道做标准差σ=1.0的高斯滤波
-Gaussian_red = cv.GaussianBlur(merged_r, (3, 3), 1)
-cv.imshow("Gaussian_red", Gaussian_red)
+Gaussian_red = cv.GaussianBlur(r, (3, 3), 1)
 
+re1 = cv.merge([Gaussian_blue, Gaussian_green, Gaussian_red])
+cv.imshow("gaussi_blur1", re1)
+
+
+# 在RGB图像的各个平面的频域上执行高斯滤波
+b, g, r = cv.split(img_pepper)
+# 傅里叶变换
+fb = np.fft.fft2(b)
+fg = np.fft.fft2(g)
+fr = np.fft.fft2(r)
+
+fbshift = np.fft.fftshift(fb)
+fgshift = np.fft.fftshift(fg)
+frshift = np.fft.fftshift(fr)
+
+mask = generate_gaussian_lpf_mask(fbshift,64)
+fbshift_blur = fbshift*mask
+fgshift_blur = fgshift*mask
+frshift_blur = frshift*mask
+
+# 傅里叶逆变换
+f1bshift = np.fft.ifftshift(fbshift_blur)
+f1gshift = np.fft.ifftshift(fgshift_blur)
+f1rshift = np.fft.ifftshift(frshift_blur)
+
+rb = np.fft.ifft2(f1bshift)
+rg = np.fft.ifft2(f1gshift)
+rr = np.fft.ifft2(f1rshift)
+
+rb_back = rb.astype(np.uint8)
+rg_back = rg.astype(np.uint8)
+rr_back = rr.astype(np.uint8)
+
+re2 = cv.merge([rb_back, rg_back, rr_back])
+cv.imshow("gaussi_blur2", re2)
 
 cv.waitKey(0)
 cv.destroyAllWindows()

@@ -1,50 +1,66 @@
 import cv2 as cv
 import numpy as np
-# 读取图片
-img = cv.imread("D:\\pictures\\car.jpg")
 
-# 添加高斯掩膜函数,mean : 均值,var : 方差
-def gasuss_noise(image, mean=0, var=0.001):
-
-    image = np.array(image/255, dtype=float)
-    noise = np.random.normal(mean, var ** 0.5, image.shape)
-    output = image + noise
-    if output.min() < 0:
-        low_clip = -1.
-    else:
-        low_clip = 0.
-    output = np.clip(output, low_clip, 1.0)
-    output = np.uint8(output*255)
-    return output
-
-# 读取图片
-img = cv.imread("D:\\pictures\\car.jpg")
-
-
-# 原图
-cv.imshow("原图", img)
-
-# 添加高斯噪声,均值为0，方差为0.001
-img_gasuss = gasuss_noise(img, mean=0, var=0.001)
-
-#显示添加高斯噪声后的图片
-cv.imshow("添加高斯噪声图片", img_gasuss)
+# 创建高斯卷积核函数
+def generate_gaussian_lpf_mask(shifted_fft, radius) -> np.ndarray:
+    """
+    Generate a gauss LPF mask for frequency domain filtering.
+    :param shifted_fft: the fft spectrum to filter
+    :param radius: the lpf filter's radius
+    :return: the mask
+    """
+    size_x = shifted_fft.shape[0]
+    size_y = shifted_fft.shape[1]
+    mask = np.zeros((size_x, size_y))
+    x0 = np.floor(size_x / 2)
+    y0 = np.floor(size_y / 2)
+    for i in range(size_x):
+        for j in range(size_y):
+            d = np.sqrt((i - x0) ** 2 + (j - y0) ** 2)
+            mask[i][j] = np.exp((-1) * d ** 2 / 2 / (radius ** 2))
+    return mask
 
 
-# 调用自行分离rgb三通道函数,对添加完高斯噪声后的图片进行高斯滤波
-b, g, r = cv.split(img_gasuss)
+img = cv.imread('car.jpg') #直接读为灰度图像
+b, g, r = cv.split(img)
 
-# blue通道做标准差σ=1.0的高斯滤波
-Gaussian_blue = cv.GaussianBlur(b, (3, 3), 1)
-cv.imshow("Gaussian_blue", Gaussian_blue)
 
-# green通道做标准差σ=1.0的高斯滤波
-Gaussian_green = cv.GaussianBlur(g, (3, 3), 1)
-cv.imshow("Gaussian_green", Gaussian_green)
+# 傅里叶变换
+fb = np.fft.fft2(b)
+fg = np.fft.fft2(g)
+fr = np.fft.fft2(r)
 
-# red通道做标准差σ=1.0的高斯滤波
-Gaussian_red = cv.GaussianBlur(r, (3, 3), 1)
-cv.imshow("Gaussian_red", Gaussian_red)
+
+fbshift = np.fft.fftshift(fb)
+fgshift = np.fft.fftshift(fg)
+frshift = np.fft.fftshift(fr)
+
+
+mask = generate_gaussian_lpf_mask(fbshift,64)
+fbshift_blur = fbshift*mask
+fgshift_blur = fgshift*mask
+frshift_blur = frshift*mask
+
+# 傅里叶逆变换
+
+f1bshift = np.fft.ifftshift(fbshift_blur)
+f1gshift = np.fft.ifftshift(fgshift_blur)
+f1rshift = np.fft.ifftshift(frshift_blur)
+
+rb = np.fft.ifft2(f1bshift)
+rg = np.fft.ifft2(f1gshift)
+rr = np.fft.ifft2(f1rshift)
+
+rb_back = rb.astype(np.uint8)
+rg_back = rg.astype(np.uint8)
+rr_back = rr.astype(np.uint8)
+
+re = cv.merge([rb_back, rg_back, rr_back])
+cv.imshow("gaussi_blur", re)
+
 
 cv.waitKey(0)
 cv.destroyAllWindows()
+
+
+
