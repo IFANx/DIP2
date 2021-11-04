@@ -34,33 +34,40 @@ def gasuss_noise(image, mean=0, var=0.001):
 
 # 读取图片
 img = cv.imread("car.jpg")
+# #保存图片
+# cv.imwrite("images\\4_original_image.jpg", img)
 
 # 添加椒盐噪声，噪声比例为 0.01
 img_pepper = sp_noise(img, prob=0.01)
-
-# 添加高斯噪声,均值为0，方差为0.001
-img_gasuss = gasuss_noise(img, mean=0, var=0.001)
-
-# 中值滤波 处理添加椒盐噪声的图片
-img_median_pepper = cv.medianBlur(img_pepper, 5)
-
-# 中值滤波 处理添加高斯噪声的图片
-img_median_gasuss = cv.medianBlur(img_gasuss, 5)
-
-# 原图
-cv.imshow("original", img)
-
 # 添加椒盐噪声后图像
 cv.imshow("add salt_pepper", img_pepper)
+# #保存图片
+# cv.imwrite("images\\4_pepper_image.jpg", img_pepper)
 
+
+# 添加高斯噪声,均值为0，方差为0.001
+img_gaussian = gasuss_noise(img, mean=0, var=0.001)
 # 添加高斯噪声后图像
-cv.imshow("add gasuss_noise", img_gasuss)
+cv.imshow("add gasuss_noise", img_gaussian)
+# #保存图片
+# cv.imwrite("images\\4_gaussian_image.jpg", img_gaussian)
 
+
+# 中值滤波 处理添加椒盐噪声的图片
+Median_filter_pepper_img = cv.medianBlur(img_pepper, 5)
 # 中值滤波处理椒盐噪声后图像
-cv.imshow("median_pepper", img_median_pepper)
+cv.imshow("Median_filter_pepper_img", Median_filter_pepper_img)
+# #保存图片
+# cv.imwrite("images\\4_Median_filter_pepper_img.jpg", Median_filter_pepper_img)
 
+
+# 中值滤波 处理添加高斯噪声的图片
+Median_filter_gasussian_img = cv.medianBlur(img_gaussian, 5)
 # 中值滤波处理高斯噪声后图像
-cv.imshow("median_gasuss", img_median_gasuss)
+cv.imshow("Median_filter_gasussian_img", Median_filter_gasussian_img)
+# #保存图片
+# cv.imwrite("images\\4_Median_filter_gasussian_img.jpg", Median_filter_gasussian_img)
+
 
 cv.waitKey(0)
 cv.destroyAllWindows()

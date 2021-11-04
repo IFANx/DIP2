@@ -20,29 +20,32 @@ def generate_gaussian_lpf_mask(shifted_fft, radius) -> np.ndarray:
             mask[i][j] = np.exp((-1) * d ** 2 / 2 / (radius ** 2))
     return mask
 
-
+# 读取图片
 img = cv.imread('car.jpg') #直接读为灰度图像
+
+# 保存图片
+# cv.imwrite("images\\2_original_image.jpg", img)
+
+# 调用分离rgb三通道函数
 b, g, r = cv.split(img)
 
-
-# 傅里叶变换
+# 每一个通道做傅里叶变换
 fb = np.fft.fft2(b)
 fg = np.fft.fft2(g)
 fr = np.fft.fft2(r)
-
 
 fbshift = np.fft.fftshift(fb)
 fgshift = np.fft.fftshift(fg)
 frshift = np.fft.fftshift(fr)
 
-
-mask = generate_gaussian_lpf_mask(fbshift,64)
+# 产生高斯卷积核
+mask = generate_gaussian_lpf_mask(fbshift, 64)
+# 对每一个频域做高斯模糊
 fbshift_blur = fbshift*mask
 fgshift_blur = fgshift*mask
 frshift_blur = frshift*mask
 
 # 傅里叶逆变换
-
 f1bshift = np.fft.ifftshift(fbshift_blur)
 f1gshift = np.fft.ifftshift(fgshift_blur)
 f1rshift = np.fft.ifftshift(frshift_blur)
@@ -55,8 +58,12 @@ rb_back = rb.astype(np.uint8)
 rg_back = rg.astype(np.uint8)
 rr_back = rr.astype(np.uint8)
 
-re = cv.merge([rb_back, rg_back, rr_back])
-cv.imshow("gaussi_blur", re)
+# 处理完的三个频域做merge
+Gaussian_filter_img = cv.merge([rb_back, rg_back, rr_back])
+cv.imshow("Gaussian_filter_img", Gaussian_filter_img)
+
+# 保存图片
+# cv.imwrite("images\\2_Gaussian_filter_img.jpg", Gaussian_filter_img)
 
 
 cv.waitKey(0)

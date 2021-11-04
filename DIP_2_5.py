@@ -136,14 +136,19 @@ def generate_gaussian_lpf_mask(shifted_fft, radius) -> np.ndarray:
 
 # 读取图像
 rgb_img = cv.imread("car.jpg")
-# 将rgb图像转化为hsi图像
-hsi_img = rgbtohsi(rgb_img)
-
 # rgb原图
 cv.imshow('rgb_img', rgb_img)
+#保存图片
+# cv.imwrite("images\\5_original_rgbimage.jpg", rgb_img)
 
+
+# 将rgb图像转化为hsi图像
+hsi_img = rgbtohsi(rgb_img)
 # hsi图片
 cv.imshow('hsi_img', hsi_img)
+#保存图片
+# cv.imwrite("images\\5_original_hsiimage.jpg", hsi_img)
+
 
 # I为HSI图像的I分量
 img = rgbtohsi(rgb_img)
@@ -151,9 +156,14 @@ h, s, i = cv.split(img)
 
 # 1.采用高斯滤波器，在I通道做标准差σ=1.0的 高斯滤波
 Gaussian_I = cv.GaussianBlur(i, (3, 3), 1)
-img1 = cv.merge([h, s, Gaussian_I])
-img2 = hsitorgb(img1)
-cv.imshow("tyt", img2)
+Gaussian_filter_hsiimg = cv.merge([h, s, Gaussian_I])
+cv.imshow("Gaussian_filter_hsiimg", Gaussian_filter_hsiimg)
+# cv.imwrite("images\\5_Gaussian_filter_hsiimg.jpg", Gaussian_filter_hsiimg)
+# hsi图片转化为rgb图片
+Gaussian_filter_rgbimg = hsitorgb(Gaussian_filter_hsiimg)
+# 显示做标准差为1的高斯滤波
+cv.imshow("Gaussian_filter_rgbimg", Gaussian_filter_rgbimg)
+# cv.imwrite("images\\5_Gaussian_filter_rgbimg.jpg", Gaussian_filter_rgbimg)
 
 # 2.使用(1)中创建的高斯掩模在RGB图像的各个平面的频域上执行高斯滤波
 fi = np.fft.fft2(i)
@@ -167,22 +177,67 @@ ri = np.fft.ifft2(f1ishift)
 
 ri_back = ri.astype(np.uint8)
 
-re = cv.merge([h, s, ri_back])
-res = hsitorgb(re)
-cv.imshow("gaussi_blur", res)
+Gaussian_filter_hsiimg2 = cv.merge([h, s, ri_back])
+cv.imshow("Gaussian_filter_hsiimg2", Gaussian_filter_hsiimg2)
+# cv.imwrite("images\\5_Gaussian_filter_hsiimg2.jpg", Gaussian_filter_hsiimg2)
+# hsi图片转化为rgb图片
+Gaussian_filter_rgbimg2 = hsitorgb(Gaussian_filter_hsiimg2)
+cv.imshow("5_Gaussian_filter_rgbimg2.jpg2", Gaussian_filter_rgbimg2)
+# cv.imwrite("images\\5_Gaussian_filter_rgbimg2.jpg", Gaussian_filter_rgbimg2)
+
 
 
 
 # 3.添加椒盐噪声，噪声比例为 0.01,并在这些图像上重复(1)和(2)
 img_I_pepper = sp_noise(img, prob=0.01)
+cv.imshow("img_I_pepper ", img_I_pepper)
+# cv.imwrite("images\\5_img_I_pepper.jpg", img_I_pepper)
 h, s, i = cv.split(img_I_pepper)
 pepper_I = cv.GaussianBlur(i, (3, 3), 1)
-img3 = cv.merge([h, s, pepper_I])
-img4 = hsitorgb(img3)
-cv.imshow("gaussi_pepper_img ", img4)
+Gaussian_filter_pepper_hsiimg1 = cv.merge([h, s, pepper_I])
+cv.imshow("Gaussian_filter_pepper_hsiimg1 ", Gaussian_filter_pepper_hsiimg1)
+# cv.imwrite("images\\5_Gaussian_filter_pepper_hsiimg1.jpg", Gaussian_filter_pepper_hsiimg1)
+
+# hsi图片转化为rgb图片
+Gaussian_filter_pepper_rgbimg1 = hsitorgb(Gaussian_filter_pepper_hsiimg1)
+cv.imshow("Gaussian_filter_pepper_rgbimg1 ", Gaussian_filter_pepper_rgbimg1)
+# cv.imwrite("images\\5_Gaussian_filter_pepper_rgbimg1.jpg", Gaussian_filter_pepper_rgbimg1)
+
+
 
 # 4. 应用中值滤波，使用5x5邻域，对这些噪声损坏的图像(高斯噪声损坏和“椒盐”噪声损坏的RGB图像)
+# 添加椒盐噪声，噪声比例为 0.01
+img_I_pepper = sp_noise(img, prob=0.01)
 
+# 添加高斯噪声,均值为0，方差为0.001
+img_I_gaussi = gasuss_noise(img, mean=0, var=0.001)
+
+# 中值滤波处理添加椒盐噪声的图片
+img_median_pepper = cv.medianBlur(img_I_pepper, 5)
+# temp1 = cv.merge([h, s, img_median_pepper])
+Median_filter_pepper_img = hsitorgb(img_median_pepper)
+
+# 中值滤波 处理添加高斯噪声的图片
+img_median_gasussi = cv.medianBlur(img_I_gaussi, 5)
+# temp2 = cv.merge([h, s, img_median_gasussi])
+Median_filter_gaussian_img = hsitorgb(img_median_gasussi)
+
+# 原图
+cv.imshow("original", img)
+
+# 添加椒盐噪声后图像
+cv.imshow("add salt_pepper", img_I_pepper)
+
+# 添加高斯噪声后图像
+cv.imshow("add gasuss_noise", img_I_gaussi)
+
+# 中值滤波处理椒盐噪声后图像
+cv.imshow("Median_filter_pepper_img", Median_filter_pepper_img)
+# cv.imwrite("images\\5_Median_filter_pepper_img.jpg", Median_filter_pepper_img)
+
+# 中值滤波处理高斯噪声后图像
+cv.imshow("Median_filter_gaussian_img", Median_filter_gaussian_img)
+# cv.imwrite("images\\5_Median_filter_gaussian_img.jpg", Median_filter_gaussian_img)
 
 
 
